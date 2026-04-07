@@ -1,0 +1,32 @@
+[project]
+name = "ttft-bench"
+version = "0.1.0"
+description = "TTFT benchmarking and Kimi K2.5 server launcher"
+requires-python = ">=3.12"
+dependencies = [
+    "aiohttp>=3.9",
+    "numpy>=1.24",
+    "nvidia-cuda-nvrtc==13.0.48",
+    "sglang[all]",
+    "sglang-kernel",
+    "torch==2.9.1",
+    "torchaudio==2.9.1",
+    "torchvision==0.24.1",
+]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu130" }]
+torchaudio = [{ index = "pytorch-cu130" }]
+torchvision = [{ index = "pytorch-cu130" }]
+nvidia-cuda-nvrtc = [{ index = "pytorch-cu130" }]
+sglang-kernel = [{ index = "sglang-cu130" }]
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "sglang-cu130"
+url = "https://docs.sglang.ai/whl/cu130/"
+explicit = true
