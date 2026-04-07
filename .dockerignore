@@ -1,0 +1,8 @@
+.git/
+__pycache__/
+*.pyc
+.venv/
+ttft-results-*/
+CLAUDE.md
+README.md
+.python-version
