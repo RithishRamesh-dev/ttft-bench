@@ -63,5 +63,6 @@ exec /app/.venv/bin/python3 -m sglang.launch_server \
     --reasoning-parser kimi_k2 \
     --tool-call-parser kimi_k2 \
     --trust-remote-code \
+    --watchdog-timeout 1200 \
     ${EXTRA_ARGS:-} \
     "$@"

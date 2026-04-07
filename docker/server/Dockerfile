@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3.12 python3.12-dev python3.12-venv \
-        curl git ca-certificates libnuma1 \
+        curl git ca-certificates libnuma1 ninja-build \
         libcublas-12-8 cuda-cudart-12-8 cuda-nvrtc-12-8 \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/python3.12 /usr/bin/python3 \
