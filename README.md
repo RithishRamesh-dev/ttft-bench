@@ -1,1 +1,1 @@
-# ttft-sam
+# ttft-bench
