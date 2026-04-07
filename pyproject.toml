@@ -11,8 +11,8 @@ dependencies = [
 [project.optional-dependencies]
 server = [
     "nvidia-cuda-nvrtc==13.0.48",
-    "sglang[all]",
-    "sglang-kernel",
+    "sglang[all]==0.5.9",
+    "sglang-kernel==0.5.9",
     "torch==2.9.1",
     "torchaudio==2.9.1",
     "torchvision==0.24.1",
