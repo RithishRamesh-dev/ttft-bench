@@ -22,9 +22,11 @@ COPY pyproject.toml uv.lock ./
 # Install all dependencies (uv sync --frozen installs base + all extras including server)
 RUN uv sync --frozen
 
-# Fix sgl-kernel version: the cu130 index provides sglang-kernel==0.4.1 which
-# is incompatible with sglang==0.5.9. Reinstall the correct version from PyPI.
-RUN uv pip install --reinstall sgl-kernel==0.3.21
+# Patch sglang's AWQ quantization to handle missing awq_marlin_moe_repack in
+# the cu130 sgl-kernel (0.4.1). This symbol is only needed for AWQ MoE models,
+# not for Kimi-K2.5 which uses compressed-tensors quantization.
+RUN sed -i 's/from sgl_kernel import awq_dequantize, awq_marlin_moe_repack, awq_marlin_repack/from sgl_kernel import awq_dequantize, awq_marlin_repack; awq_marlin_moe_repack = None/' \
+    /app/.venv/lib/python3.12/site-packages/sglang/srt/layers/quantization/awq.py
 
 # Copy project files
 COPY *.py *.sh ./
