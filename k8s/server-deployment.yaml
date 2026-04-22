@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ttft-server
+  namespace: ttft-bench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ttft-server
+  template:
+    metadata:
+      labels:
+        app: ttft-server
+    spec:
+      # Model download init container
+      initContainers:
+        - name: download-model
+          image: ghcr.io/do-solutions/ttft-server:latest
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              /app/.venv/bin/huggingface-cli download "${MODEL}" --cache-dir /models
+          env:
+            - name: MODEL
+              value: "moonshotai/Kimi-K2.5"
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: HF_TOKEN
+                  optional: true
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+          resources:
+            requests:
+              memory: "4Gi"
+              cpu: "4"
+
+      containers:
+        - name: sglang-server
+          image: ghcr.io/do-solutions/ttft-server:latest
+          ports:
+            - containerPort: 30000
+          env:
+            - name: MODEL
+              value: "moonshotai/Kimi-K2.5"
+            - name: TP
+              value: "8"
+            - name: PORT
+              value: "30000"
+            - name: MEM_FRACTION
+              value: "0.95"
+            - name: HF_HOME
+              value: /models
+            - name: TRANSFORMERS_CACHE
+              value: /models
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: HF_TOKEN
+                  optional: true
+            - name: SGLANG_DISABLE_CUDNN_CHECK
+              value: "1"
+            - name: NCCL_DEBUG
+              value: "WARN"
+          volumeMounts:
+            - name: model-cache
+              mountPath: /models
+            - name: dshm
+              mountPath: /dev/shm
+          resources:
+            requests:
+              memory: "64Gi"
+              cpu: "16"
+          securityContext:
+            privileged: true  # For nvidia-smi -pm 1
+          startupProbe:
+            httpGet:
+              path: /v1/models
+              port: 30000
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 180  # Up to 30 minutes for model loading
+          readinessProbe:
+            httpGet:
+              path: /v1/models
+              port: 30000
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /v1/models
+              port: 30000
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+
+      volumes:
+        - name: model-cache
+          hostPath:
+            path: /data/models
+            type: DirectoryOrCreate
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "64Gi"
+
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+
+      nodeSelector:
+        doks.digitalocean.com/node-pool: gpu

@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ttft-benchmark
+  namespace: ttft-bench
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: benchmark
+          image: ghcr.io/do-solutions/ttft-benchmark:latest
+          env:
+            - name: BASE_URL
+              value: "http://ttft-server.ttft-bench.svc.cluster.local:30000"
+            - name: MODEL
+              value: "moonshotai/Kimi-K2.5"
+            - name: OUTPUT_DIR
+              value: "/results"
+            - name: SERVER_WAIT_TIMEOUT
+              value: "900"
+            - name: BENCHMARK_ARGS
+              value: "--prompt-lengths 32,128,512,2048 --concurrency-levels 1,2,4 --trials 5"
+          volumeMounts:
+            - name: results
+              mountPath: /results
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "2"
+
+      volumes:
+        - name: results
+          hostPath:
+            path: /data/benchmark-results
+            type: DirectoryOrCreate
+
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+
+      nodeSelector:
+        doks.digitalocean.com/node-pool: gpu

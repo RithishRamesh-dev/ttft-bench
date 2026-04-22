@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ttft-server
+  namespace: ttft-bench
+spec:
+  selector:
+    app: ttft-server
+  ports:
+    - port: 30000
+      targetPort: 30000
+      protocol: TCP
+  type: ClusterIP

@@ -31,6 +31,10 @@ ensure_uv() {
 }
 
 sync_benchmark_environment() {
+    if [[ "${SKIP_UV_SYNC:-}" == "1" ]]; then
+        echo "  Skipping uv sync (SKIP_UV_SYNC=1)"
+        return
+    fi
     echo ""
     echo "Syncing uv environment (benchmark deps)..."
     uv sync --project "${SCRIPT_DIR}"
@@ -38,7 +42,11 @@ sync_benchmark_environment() {
 }
 
 uv_project_python() {
-    uv run --project "${SCRIPT_DIR}" python "$@"
+    if [[ "${SKIP_UV_SYNC:-}" == "1" ]]; then
+        python "$@"
+    else
+        uv run --project "${SCRIPT_DIR}" python "$@"
+    fi
 }
 
 # ── Defaults ─────────────────────────────────────────────────────────────────
